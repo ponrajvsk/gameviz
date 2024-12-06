@@ -22,3 +22,8 @@
     ```bash
     pip intall -r requirements.txt
     ```
+   
+You can simply do all the steps by running a command like this
+   ```bash
+   /bin/bash createNewVirtualenv.sh
+   ```
