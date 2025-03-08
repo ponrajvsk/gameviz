@@ -1,4 +1,4 @@
-# Ecommerce
+# GameViz
 
 ## Setting up Virtual Env
 

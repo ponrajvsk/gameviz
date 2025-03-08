@@ -1,6 +1,6 @@
 from flask import Flask
 
-app = Flask("Ecommerce")
+app = Flask("Gameviz")
 
 
 def main():
