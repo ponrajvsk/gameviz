@@ -15,6 +15,11 @@ class Collections:
     TEAMS: str = "teams"
     PLAYERS: str = "players"
     SERIES: str = "series"
+    STADIUM: str = "stadium"
+    MATCHES: str = "matches"
+    INNINGS: str = "innings"
+    OVERS: str = "overs"
+    DELIVERIES: str = "deliveries"
 
 
 class CollectionAdapters:
@@ -23,3 +28,14 @@ class CollectionAdapters:
     PLAYERS: db_adapters.CollectionAdapter = db_adapters.CollectionAdapter(DatabaseAdapter.CRICKET, Collections.PLAYERS)
 
     SERIES: db_adapters.CollectionAdapter = db_adapters.CollectionAdapter(DatabaseAdapter.CRICKET, Collections.SERIES)
+
+    STADIUM: db_adapters.CollectionAdapter = db_adapters.CollectionAdapter(DatabaseAdapter.CRICKET, Collections.STADIUM)
+
+    MATCHES: db_adapters.CollectionAdapter = db_adapters.CollectionAdapter(DatabaseAdapter.CRICKET, Collections.MATCHES)
+
+    INNINGS: db_adapters.CollectionAdapter = db_adapters.CollectionAdapter(DatabaseAdapter.CRICKET, Collections.INNINGS)
+
+    OVERS: db_adapters.CollectionAdapter = db_adapters.CollectionAdapter(DatabaseAdapter.CRICKET, Collections.OVERS)
+
+    DELIVERIES: db_adapters.CollectionAdapter = db_adapters.CollectionAdapter(DatabaseAdapter.CRICKET,
+                                                                              Collections.DELIVERIES)
