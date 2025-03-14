@@ -1,6 +1,7 @@
 from typing import Dict, Any, Optional
 from typing import Type
 
+from bson import ObjectId
 from motor.core import AgnosticCollection
 from motor.core import AgnosticCursor
 from motor.core import AgnosticDatabase
@@ -68,9 +69,9 @@ class CollectionAdapter:
 
     async def insert_one(self,
                          data: Dict[str, Any],
-                         /) -> str:
+                         /) -> ObjectId:
         result = await self.get_collection().insert_one(data)
-        return str(result.inserted_id)
+        return result.inserted_id
 
     async def find_one(self,
                        query: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -81,6 +82,10 @@ class CollectionAdapter:
                              /) -> AgnosticCursor:
         cursor = self.get_collection().find(query)
         return cursor
+
+    async def update_one(self, query: dict, update: dict):
+        """Updates a single document in the collection."""
+        return await self.get_collection().update_one(query, update)
 
     async def update_many(self,
                           query: Dict[str, Any],

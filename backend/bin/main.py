@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from db import CollectionAdapters
+from db.db import CollectionAdapters
 
 # FastAPI app
 app = FastAPI()
