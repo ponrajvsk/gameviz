@@ -21,8 +21,8 @@ class StringField(BaseField):
         super().__init__(desc, mandatory, default)
 
     def validate(self, value):
-        if not isinstance(value, str):
-            raise ValueError(f"Expected string, got {type(value).__name__}")
+        if value is not None and not isinstance(value, str):
+            raise ValueError(f"Expected string, got {type(value).__name__} for field {self.desc}")
 
 
 class IntegerField(BaseField):
@@ -42,7 +42,7 @@ class FloatField(BaseField):
 
     def validate(self, value):
         if not isinstance(value, float):
-            raise ValueError(f"Expected integer, got {type(value).__name__}")
+            raise ValueError(f"Expected float, got {type(value).__name__}")
 
 
 class BooleanField(BaseField):
