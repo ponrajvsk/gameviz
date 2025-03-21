@@ -98,3 +98,8 @@ class CollectionAdapter:
                          query: Dict[str, Any]) -> int:
         result = await self.get_collection().delete_one(query)
         return result.deleted_count
+
+    async def delete_many(self,
+                          query: Dict[str, Any]) -> int:
+        result = await self.get_collection().delete_many(query)
+        return result.deleted_count

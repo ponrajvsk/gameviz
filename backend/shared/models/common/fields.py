@@ -42,7 +42,7 @@ class FloatField(BaseField):
 
     def validate(self, value):
         if not isinstance(value, float):
-            raise ValueError(f"Expected integer, got {type(value).__name__}")
+            raise ValueError(f"Expected float, got {type(value).__name__}")
 
 
 class BooleanField(BaseField):

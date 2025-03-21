@@ -1,7 +1,10 @@
 import typing
 from datetime import datetime
 
+from bson import ObjectId
+
 from db.db import Collections
+from shared.models import cricket_enum
 from shared.models.common import fields
 from shared.models.common.base import BaseModel
 
@@ -33,15 +36,26 @@ class Player(BaseModel):
     teams: typing.List[str]
 
     id = fields.ObjectIdField(desc="Id of the series")
-    age = fields.StringField(desc="Age of the player in year and days format")
-    batting_style = fields.StringField(desc="Batting style (Right-hand, Left-hand)")
-    bowling_style = fields.StringField(desc="Bowling style (Off-spin, Leg-spin, etc.)")
+    age = fields.IntegerField(desc="Age of the player in year and days format", default=0)
+    batting_style = fields.StringField(desc="Batting style (Right-hand, Left-hand)", default="")
+    bowling_style = fields.StringField(desc="Bowling style (Off-spin, Leg-spin, etc.)", default="")
     cric_sheet_id = fields.StringField(desc="Id of the player in cricsheet", mandatory=True)
-    date_of_birth = fields.DateTimeField(desc="Date of birth of the player")
-    full_name = fields.StringField(desc="Full name of the player", mandatory=True)
+    date_of_birth = fields.DateTimeField(desc="Date of birth of the player", default=datetime.now())
+    full_name = fields.StringField(desc="Full name of the player", default="")
     name = fields.StringField(desc="Full name of the player", mandatory=True)
-    role = fields.StringField(desc="Player's role in the team")
-    teams = fields.ListField(fields.ObjectIdField, desc="Associated team IDs")
+    role = fields.StringField(desc="Player's role in the team", default="")
+    teams = fields.ListField(ObjectId, desc="Associated team IDs", default=[])
+
+
+class Umpire(BaseModel):
+    collection_name = Collections.UMPIRES.upper()
+
+    full_name: str
+    name: str
+
+    id = fields.ObjectIdField(desc="Id of the umpire")
+    full_name = fields.StringField(desc="Full name of the umpire", default="")
+    name = fields.StringField(desc="Role of the umpire (TV, Reserve, Field)", mandatory=True)
 
 
 class Stadium(BaseModel):
@@ -49,11 +63,15 @@ class Stadium(BaseModel):
 
     capacity: typing.Optional[int]
     city: str
+    country: str
+    locality: str
     name: str
 
-    id = fields.ObjectIdField(desc="Id of the series")
-    capacity = fields.IntegerField(desc="Capacity of the stadium")
+    id = fields.ObjectIdField(desc="Id of the stadium")
+    capacity = fields.IntegerField(desc="Capacity of the stadium", default=0)
     city = fields.StringField(desc="City where the stadium is located", mandatory=True)
+    country = fields.StringField(desc="Country where the stadium is located", default="")
+    locality = fields.StringField(desc="Locality or area where the stadium is situated", default="")
     name = fields.StringField(desc="Full name of the stadium", mandatory=True)
 
 
@@ -61,6 +79,7 @@ class Series(BaseModel):
     collection_name = Collections.SERIES.upper()
 
     gender: str
+
     match_type: str
     name: str
     season: str
@@ -71,19 +90,19 @@ class Series(BaseModel):
     match_type = fields.StringField(desc="Type of match (T20, ODI, Test)", mandatory=True)
     name = fields.StringField(desc="Name of the series", mandatory=True)
     season = fields.StringField(desc="Season or year of the series", mandatory=True)
-    teams = fields.ListField(fields.ObjectIdField, desc="List of participating teams", default=[])
+    teams = fields.ListField(ObjectId, desc="List of participating teams", default=[])
 
 
 class Officials(BaseModel):
-    match_referees: typing.List[str]
-    reserve_umpires: typing.List[str]
-    tv_umpires: typing.List[str]
-    umpires: typing.List[str]
+    match_referees: typing.List[ObjectId]
+    reserve_umpires: typing.List[ObjectId]
+    tv_umpires: typing.List[ObjectId]
+    umpires: typing.List[ObjectId]
 
-    match_referees = fields.ListField(fields.ObjectIdField, desc="List of match referees")
-    reserve_umpires = fields.ListField(fields.ObjectIdField, desc="List of reserve umpires")
-    tv_umpires = fields.ListField(fields.ObjectIdField, desc="List of TV umpires")
-    umpires = fields.ListField(fields.ObjectIdField, desc="List of field umpires", mandatory=True)
+    match_referees = fields.ListField(ObjectId, desc="List of match referees", default=[])
+    reserve_umpires = fields.ListField(ObjectId, desc="List of reserve umpires", default=[])
+    tv_umpires = fields.ListField(ObjectId, desc="List of TV umpires", default=[])
+    umpires = fields.ListField(ObjectId, desc="List of field umpires", mandatory=True)
 
 
 class Outcome(BaseModel):
@@ -92,30 +111,41 @@ class Outcome(BaseModel):
     is_draw: bool
     winner: str
 
-    by_runs = fields.IntegerField(desc="Margin of victory in runs")
-    by_wickets = fields.IntegerField(desc="Margin of victory in wickets")
+    by_runs = fields.IntegerField(desc="Margin of victory in runs", default=0)
+    by_wickets = fields.IntegerField(desc="Margin of victory in wickets", default=0)
     is_draw = fields.BooleanField(desc="Indicates if the match ended in a draw", default=False)
-    winner = fields.StringField(desc="Winning team name", mandatory=True)
+    winner = fields.ObjectIdField(desc="Winning team id", mandatory=True)
 
 
 class TeamPlayers(BaseModel):
     players: typing.List[str]
     team_id: str
 
-    players = fields.ListField(fields.ObjectIdField, desc="List of player IDs", mandatory=True)
+    players = fields.ListField(ObjectId, desc="List of player IDs", mandatory=True)
     team_id = fields.ObjectIdField(desc="ID of the team", mandatory=True)
 
 
+class Toss(BaseModel):
+    decision: str
+    team: str
+
+    decision = fields.StringField(desc="Decision made by the toss winner (bat/field)", mandatory=True)
+    team = fields.ObjectIdField(desc="ID of the team that won the toss", mandatory=True)
+
+
 class Match(BaseModel):
+    collection_name = Collections.MATCHES.upper()
+
     dates: typing.List[datetime]
     match_number: int
-    outcome: typing.Optional[Outcome]
+    outcome: Outcome
     player_of_match: typing.Optional[str]
     series: str
     team_1: TeamPlayers
     team_2: TeamPlayers
     umpires: Officials
     venue: str
+    toss: Toss
 
     dates = fields.ListField(datetime, desc="List of match dates", mandatory=True)
     match_number = fields.IntegerField(desc="Number of the match", mandatory=True)
@@ -124,136 +154,131 @@ class Match(BaseModel):
     series = fields.ObjectIdField(desc="Id of the series", mandatory=True)
     team_1 = fields.NestedField(TeamPlayers, desc="Id of the team one", mandatory=True)
     team_2 = fields.NestedField(TeamPlayers, desc="Id of the team two", mandatory=True)
+    toss = fields.NestedField(Toss, desc="Toss details", mandatory=True)
     umpires = fields.NestedField(Officials, desc="Match officials", mandatory=True)
     venue = fields.ObjectIdField(desc="Id of the match venue", mandatory=True)
 
 
-class BattingPerformance(BaseModel):
+class Innings(BaseModel):
+    collection_name = Collections.INNINGS.upper()
+
+    match_id: ObjectId
+    batting_team: ObjectId
+    total_runs: int
+    wickets_lost: int
+    overs_played: float
+
+    match_id = fields.ObjectIdField(desc="Id of the match")
+    batting_team = fields.ObjectIdField(desc="Id of the batting team")
+    total_runs = fields.IntegerField(desc="Total runs scored in the innings", default=0)
+    wickets_lost = fields.IntegerField(desc="Number of wickets lost in the innings", default=0)
+    overs_played = fields.FloatField(desc="Number of overs played in the innings", default=0.0)
+
+
+class Delivery(BaseModel):
+    collection_name = Collections.DELIVERIES.upper()
+
+    innings_id: ObjectId
+    over_number: int
+    delivery_number: int
+    batter: ObjectId
+    bowler: ObjectId
+    non_striker: str
+    runs_by_batter: int
+    extras: int
+    total_runs: int
+
+    # Wicket Information
+    is_wicket: bool
+    wicket_type: typing.Optional[cricket_enum.WicketType]
+    fielder_involved: typing.Optional[list[ObjectId]]
+
+    # Extra tracking
+    is_wide: bool
+    is_no_ball: bool
+    is_leg_bye: bool
+    is_bye: bool
+    penalty_runs: int
+
+    innings_id = fields.ObjectIdField(desc="Id of the innings")
+    over_number = fields.IntegerField(desc="Over number in the innings")
+    delivery_number = fields.IntegerField(desc="Delivery number in the over")
+    batter = fields.ObjectIdField(desc="Id of the batter")
+    bowler = fields.ObjectIdField(desc="Id of the bowler")
+    non_striker = fields.ObjectIdField(desc="Id of the non-striker")
+    runs_by_batter = fields.IntegerField(desc="Runs scored by the batter")
+    extras = fields.IntegerField(desc="Extra runs in the delivery")
+    is_wicket = fields.BooleanField(desc="Indicates if the delivery resulted in a wicket", default=False)
+    wicket_type = fields.StringField(desc="Type of the wicket", default="")
+    fielder_involved = fields.ListField(ObjectId, desc="Ids of fielders involved in the wicket", default=[])
+    is_wide = fields.BooleanField(desc="Indicates if the delivery is a wide", default=False)
+    is_no_ball = fields.BooleanField(desc="Indicates if the delivery is a no-ball", default=False)
+    is_leg_bye = fields.BooleanField(desc="Indicates if the delivery is a leg bye", default=False)
+    is_bye = fields.BooleanField(desc="Indicates if the delivery is a bye", default=False)
+    penalty_runs = fields.IntegerField(desc="Penalty runs awarded in the delivery", default=0)
+
+
+class BattingStats(BaseModel):
+    runs_scored: int
     balls_faced: int
-    bowler: typing.Optional[str]
-    dismissal: typing.Optional[str]
-    fielder: typing.Optional[str]
     fours: int
-    player: str
-    runs: int
     sixes: int
     strike_rate: float
+    dot_balls: int
+    is_out: bool
+    dismissal_type: typing.Optional[cricket_enum.WicketType]
+    fielders_involved: typing.Optional[list[ObjectId]]
 
-    balls_faced = fields.IntegerField(desc="Balls faced", mandatory=True, default=0)
-    bowler = fields.StringField(desc="Bowler who dismissed the batsman", mandatory=False)
-    dismissal = fields.StringField(desc="How the batsman got out", mandatory=False)
-    fielder = fields.StringField(desc="Fielder involved in dismissal", mandatory=False)
-    fours = fields.IntegerField(desc="Number of boundaries (4s)", mandatory=True, default=0)
-    player = fields.StringField(desc="Batsman's name", mandatory=True)
-    runs = fields.IntegerField(desc="Runs scored", mandatory=True, default=0)
-    sixes = fields.IntegerField(desc="Number of sixes", mandatory=True, default=0)
-    strike_rate = fields.FloatField(desc="Strike rate", mandatory=True, default=0.0)
+    runs_scored = fields.IntegerField(desc="Runs scored by the batter")
+    balls_faced = fields.IntegerField(desc="Balls faced by the batter")
+    fours = fields.IntegerField(desc="Number of fours hit by the batter")
+    sixes = fields.IntegerField(desc="Number of sixes hit by the batter")
+    strike_rate = fields.FloatField(desc="Strike rate of the batter")
+    dot_balls = fields.IntegerField(desc="Number of dot balls faced by the batter")
+    is_out = fields.BooleanField(desc="Indicates if the batter is out")
+    dismissal_type = fields.StringField(desc="Type of dismissal", default="")
+    fielders_involved = fields.ListField(ObjectId, desc="Fielders involved in the dismissal", default=[])
 
 
-class BowlingPerformance(BaseModel):
-    economy: float
-    maidens: int
-    no_balls: int
-    overs: float
-    player: str
+class BowlingStats(BaseModel):
+    overs_bowled: float
+    wickets_taken: int
     runs_conceded: int
-    wides: int
-    wickets: int
+    maidens: int
+    economy: float
+    dot_balls: int
+    boundaries_conceded: dict[str, int]
 
-    economy = fields.FloatField(desc="Bowling economy rate", mandatory=True, default=0.0)
-    maidens = fields.IntegerField(desc="Maiden overs bowled", mandatory=True, default=0)
-    no_balls = fields.IntegerField(desc="No-balls bowled", mandatory=True, default=0)
-    overs = fields.FloatField(desc="Overs bowled", mandatory=True, default=0.0)
-    player = fields.StringField(desc="Bowler's name", mandatory=True)
-    runs_conceded = fields.IntegerField(desc="Runs conceded", mandatory=True, default=0)
-    wides = fields.IntegerField(desc="Wides bowled", mandatory=True, default=0)
-    wickets = fields.IntegerField(desc="Wickets taken", mandatory=True, default=0)
-
-
-class Extras(BaseModel):
-    byes: int
-    leg_byes: int
-    no_balls: int
-    penalty_runs: int
-    wides: int
-
-    byes = fields.IntegerField(desc="Byes conceded", mandatory=True, default=0)
-    leg_byes = fields.IntegerField(desc="Leg byes conceded", mandatory=True, default=0)
-    no_balls = fields.IntegerField(desc="No-balls conceded", mandatory=True, default=0)
-    penalty_runs = fields.IntegerField(desc="Penalty runs conceded", mandatory=True, default=0)
-    wides = fields.IntegerField(desc="Wides conceded", mandatory=True, default=0)
+    overs_bowled = fields.FloatField(desc="Overs bowled by the player")
+    wickets_taken = fields.IntegerField(desc="Wickets taken by the player")
+    runs_conceded = fields.IntegerField(desc="Runs conceded by the player")
+    maidens = fields.IntegerField(desc="Maiden overs bowled by the player")
+    economy = fields.FloatField(desc="Economy rate of the player")
+    dot_balls = fields.IntegerField(desc="Dot balls bowled by the player")
+    boundaries_conceded = fields.DictField(desc="Boundaries conceded by the player")
 
 
-class FallOfWickets(BaseModel):
-    wicket_number = fields.IntegerField(desc="Wicket number", mandatory=True)
-    runs_at_fall = fields.IntegerField(desc="Team score when the wicket fell", mandatory=True)
-    over_at_fall = fields.FloatField(desc="Over number when the wicket fell", mandatory=True)
-    batsman = fields.StringField(desc="Batsman dismissed", mandatory=True)
+class FieldingStats(BaseModel):
+    catches_taken: int
+    run_outs: int
+    stumping: int
+
+    catches_taken = fields.IntegerField(desc="Catches taken by the player")
+    run_outs = fields.IntegerField(desc="Run outs by the player")
+    stumping = fields.IntegerField(desc="Stumping by the player")
 
 
-class Partnership(BaseModel):
-    batsmen = fields.ListField(str, desc="Batsmen involved in partnership", mandatory=True)
-    runs = fields.IntegerField(desc="Runs scored in partnership", mandatory=True, default=0)
-    balls = fields.IntegerField(desc="Balls faced in partnership", mandatory=True, default=0)
+class PlayerScorecard(BaseModel):
+    collection_name = Collections.PLAYER_SCORECARD.upper()
 
+    player_id: ObjectId
+    match_id: ObjectId
+    batting_stats: typing.Optional[BattingStats]
+    bowling_stats: typing.Optional[BowlingStats]
+    fielding_stats: typing.Optional[FieldingStats]
 
-class TeamScore(BaseModel):
-    team = fields.StringField(desc="Team name", mandatory=True)
-    total_runs = fields.IntegerField(desc="Total runs scored", mandatory=True, default=0)
-    wickets_lost = fields.IntegerField(desc="Total wickets lost", mandatory=True, default=0)
-    overs_played = fields.FloatField(desc="Total overs played", mandatory=True, default=0.0)
-
-
-class Scorecard(BaseModel):
-    team = fields.StringField(desc="Team name", mandatory=True)
-    batting_performance = fields.ListField(BattingPerformance, desc="Batting statistics", mandatory=True)
-    bowling_performance = fields.ListField(BowlingPerformance, desc="Bowling statistics", mandatory=True)
-    extras = fields.NestedField(Extras, desc="Extras conceded", mandatory=True)
-    fall_of_wickets = fields.ListField(FallOfWickets, desc="Fall of wickets details", mandatory=True)
-    partnerships = fields.ListField(Partnership, desc="Partnership details", mandatory=True)
-    final_score = fields.NestedField(TeamScore, desc="Final team score", mandatory=True)
-    player_of_match = fields.StringField(desc="Player of the match", mandatory=False)
-
-
-class PowerplayModel(BaseModel):
-    from_over = fields.FloatField(desc="Start over of powerplay", mandatory=True)
-    to_over = fields.FloatField(desc="End over of powerplay", mandatory=True)
-    type = fields.StringField(desc="Type of powerplay (e.g., mandatory, batting, bowling)", mandatory=True)
-
-
-class TargetModel(BaseModel):
-    overs = fields.IntegerField(desc="Total overs allocated for the chase", mandatory=True)
-    runs = fields.IntegerField(desc="Target runs to be chased", mandatory=True)
-
-
-class InningsModel(BaseModel):
-    innings_id = fields.ObjectIdField(desc="Unique innings identifier", mandatory=True)
-    match_id = fields.ObjectIdField(desc="Reference to the match", mandatory=True)
-    team = fields.ObjectIdField(desc="Team playing the innings", mandatory=True)
-    overs = fields.ListField(fields.ObjectIdField, desc="References to over documents", mandatory=True)
-    power_play = fields.NestedField(PowerplayModel, desc="Powerplay details", mandatory=False)
-    target = fields.NestedField(TargetModel, desc="Target details if applicable", mandatory=False)
-    scoreboard = fields.NestedField(Scorecard, desc="Details of first innings", mandatory=True)
-
-
-class OverModel(BaseModel):
-    over_id = fields.ObjectIdField(desc="Unique over identifier", mandatory=True)
-    innings_id = fields.ObjectIdField(desc="Reference to innings", mandatory=True)
-    over_number = fields.IntegerField(desc="Over number", mandatory=True)
-    deliveries = fields.ListField(fields.ObjectIdField, desc="References to delivery documents", mandatory=True)
-
-
-class RunsModel(BaseModel):
-    runs_by_batter = fields.IntegerField(desc="Runs scored by the batter", mandatory=True)
-    extras = fields.IntegerField(desc="Extra runs in the delivery", mandatory=True)
-    total = fields.IntegerField(desc="Total runs scored on the delivery", mandatory=True)
-
-
-class DeliveryModel(BaseModel):
-    delivery_id = fields.ObjectIdField(desc="Unique delivery identifier", mandatory=True)
-    over_id = fields.ObjectIdField(desc="Reference to over", mandatory=True)
-    delivery_number = fields.IntegerField(desc="Sequence number of the delivery within the over", mandatory=True)
-    batter = fields.ObjectIdField(desc="Batter on strike", mandatory=True)
-    bowler = fields.ObjectIdField(desc="Bowler delivering the ball", mandatory=True)
-    non_striker = fields.ObjectIdField(desc="Non-striker batter", mandatory=True)
-    runs = fields.NestedField(RunsModel, desc="Runs details for this delivery", mandatory=True)
+    player_id = fields.ObjectIdField(desc="Id of the player")
+    match_id = fields.ObjectIdField(desc="Id of the match")
+    batting_stats = fields.NestedField(BattingStats, desc="Batting statistics of the player", default={})
+    bowling_stats = fields.NestedField(BowlingStats, desc="Bowling statistics of the player", default={})
+    fielding_stats = fields.NestedField(FieldingStats, desc="Fielding statistics of the player", default={})
